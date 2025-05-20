@@ -1,0 +1,5 @@
+name: 'doubledb'
+type: module
+description: 'Module to test the connection to double db'
+package: Custom
+core_version_requirement: ^10 || ^11

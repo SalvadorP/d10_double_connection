@@ -60,3 +60,6 @@
 /drush
 /drupal.phar
 /drupal
+
+/web/modules/contrib
+/web/themes/contrib

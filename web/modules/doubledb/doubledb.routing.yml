@@ -1,0 +1,12 @@
+doubledb.list:
+  path: '/doubledb/list'
+  defaults:
+    _title: 'List'
+    _controller: '\Drupal\doubledb\Controller\DoubledbController::getLastPages'
+  requirements:
+    # _permission: 'access content'
+    _access: 'TRUE'
+  methods: [GET]
+  options:
+    _auth: ['basic_auth','basic']
+    no_cache: TRUE
