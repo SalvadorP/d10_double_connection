@@ -1,0 +1,22 @@
+services:
+  db-external:
+    image: mariadb:10.11
+    container_name: d10test-db-external
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: externalroot
+      MYSQL_DATABASE: external_db
+      MYSQL_USER: external
+      MYSQL_PASSWORD: external
+    volumes:
+      - db_external_data:/var/lib/mysql
+    networks:
+      - ddev_default
+
+volumes:
+  db_external_data:
+
+networks:
+  ddev_default:
+    external: true
