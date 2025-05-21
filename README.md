@@ -1,2 +1,39 @@
 # d10_double_connection
 Drupal 10 instance to test DDEV and also a double connection to double database, one is the replica from the other.
+
+# How to install
+1. Change if necessary the name of the project on .ddev
+2. Run composer install and install all the D10 core and contrib and dependencies
+3. Install the site to the default database.
+4. Add to settings.php the connection to the replica, below the settings.ddev.php lines:
+```
+if (getenv('IS_DDEV_PROJECT') == 'true' && file_exists(__DIR__ . '/settings.ddev.php')) {
+  include __DIR__ . '/settings.ddev.php';
+}
+
+$databases['default']['replica']['database'] = "db";
+$databases['default']['replica']['username'] = "db";
+$databases['default']['replica']['password'] = "db";
+$databases['default']['replica']['host'] = "db-external";
+$databases['default']['replica']['port'] = 3306;
+$databases['default']['replica']['driver'] = "mysql";
+```
+5. Then after the default DB is installed, overwrite the default/replica config so you can install the second DB.
+```
+$databases['default']['default']['host'] = "db-external";
+```
+6. After the installation has been completed, switch back the default/default entries to default/replica
+```
+$databases['default']['replica']['host'] = "db-external";
+```
+7. Create nodes on the default DB, and switch to replica when need to create nodes there.
+8. On each change clear caches, and the DB will be switched seamlessly.
+
+# How to test.
+Once the two databases have data, the test can be performed using this endpoint:
+**doubledb/list?replica=1**
+
+<ins>It needs basic auth, just for testing purposes.</ins>
+
+The parameter replica=1 means that the DB going to be used will be replica.
+If no replica parameter or replica=0, the default database will be used.
