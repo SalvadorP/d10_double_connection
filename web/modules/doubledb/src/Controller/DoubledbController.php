@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- * Returns JSON of the last 100 “page” nodes from an external DB.
+ * Json of the last modified 100 articles.
  */
 class DoubledbController extends ControllerBase {
 
@@ -30,7 +30,6 @@ class DoubledbController extends ControllerBase {
 
   public function getLastPages(Request $request) {
 
-    // 1) Basic Auth handling
     $auth_header = $request->headers->get('Authorization');
     if (empty($auth_header) || strpos($auth_header, 'Basic ') !== 0) {
       throw new AccessDeniedHttpException('Missing Basic Auth header.');
@@ -45,11 +44,9 @@ class DoubledbController extends ControllerBase {
 
     $replica = $request->get('replica');
     if (!empty($replica)) {
-      // 2) Switch to external database
       $connection = Database::getConnection('replica');
     }
 
-    // 3) Query the last 100 pages
     $query = $connection->select('node_field_data', 'n')
       ->fields('n', ['nid', 'title', 'uid', 'created', 'status'])
       ->condition('n.type', 'article')
@@ -58,20 +55,19 @@ class DoubledbController extends ControllerBase {
       ->range(0, 100);
     $results = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
 
-    // 4) Tidy up the date & return
     $data = array_map(function($row) {
       return [
         'id'          => (int) $row['nid'],
         'title'       => $row['title'],
         'author_uid'  => (int) $row['uid'],
-        // 'created_at'  => date(DATE_ATOM, $row['created']),
+        'created_at'  => date('d/m/Y H:i:s', $row['created']),
         'published'   => (bool) $row['status'],
       ];
     }, $results);
 
-    Database::setActiveConnection();
+    // Only needed if previously changed the connection -> entityQuery.
+    // Database::setActiveConnection();
 
-    // 5) Hand it back!
     return new JsonResponse($data);
   }
 
