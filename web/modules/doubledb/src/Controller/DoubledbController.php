@@ -64,7 +64,7 @@ class DoubledbController extends ControllerBase {
         'id'          => (int) $row['nid'],
         'title'       => $row['title'],
         'author_uid'  => (int) $row['uid'],
-        'created_at'  => date(DATE_ATOM, $row['created']),
+        // 'created_at'  => date(DATE_ATOM, $row['created']),
         'published'   => (bool) $row['status'],
       ];
     }, $results);
