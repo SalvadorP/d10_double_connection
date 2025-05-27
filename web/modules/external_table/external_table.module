@@ -1,0 +1,86 @@
+<?php
+
+use Drupal\node\NodeInterface;
+
+/**
+ * @file
+ * Primary module hooks for External Table module.
+ */
+
+
+function external_table_form_node_patrol_edit_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $node = $form_state->getFormObject()->getEntity();
+
+  $route_data = \Drupal::database()->select('external_route_solved', 'e')
+    ->fields('e', ['route_data'])
+    ->condition('nid', $node->id())
+    ->execute()
+    ->fetchField();
+
+  $form['field_route_solved'][0]['value']['#default_value'] = $route_data;
+
+  $form['#submit'][] = 'external_table_storage_route_solved';
+}
+
+/**
+ * Custom submit callback.
+ *
+ * @param [type] $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @return void
+ */
+function external_table_storage_route_solved($form, \Drupal\Core\Form\FormStateInterface $form_state) {
+}
+
+
+
+
+function external_table_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
+  if ($entity instanceof NodeInterface && $entity->bundle() === 'patrols') {
+
+    $nid = $entity->id();
+    $route_data = $entity->get('field_route_solved')->value ?? '';
+
+    // No data do nothing
+    if (empty($route_data)) {
+      return;
+    }
+
+    // Retrieve connection
+    $connection = \Drupal::database();
+
+    // Check if the node exists.
+    $exists = $connection->select('external_route_solved', 'e')
+      ->fields('e', ['id', 'nid'])
+      ->condition('nid', $nid)
+      ->execute()
+      ->fetchField();
+
+    $timestamp = \Drupal::time()->getCurrentTime();
+
+    if ($exists) {
+      \Drupal::logger('external_table')->info('UDPATE registry ', ['nid' => $nid, 'route_solved' => $route_data]);
+      $connection->update('external_route_solved')
+        ->fields([
+          'route_data' => $route_data,
+          'changed' => $timestamp,
+        ])
+        ->condition('nid', $nid)
+        ->execute();
+    } else {
+      \Drupal::logger('external_table')->info('Creating registry ', ['nid' => $nid, 'route_solved' => $route_data]);
+      $connection->insert('external_route_solved')
+        ->fields([
+          'nid' => $nid,
+          'route_data' => $route_data,
+          'created' => $timestamp,
+          'changed' => $timestamp,
+        ])
+        ->execute();
+    }
+
+    // Wipe the field.
+    $entity->set('field_route_solved', '');
+  }
+
+}

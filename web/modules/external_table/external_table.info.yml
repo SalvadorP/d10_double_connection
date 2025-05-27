@@ -1,0 +1,5 @@
+name: 'External Table'
+type: module
+description: 'Module that checks that is possible to store/gather data from external tables, not in Drupal revisioning system.'
+package: Custom
+core_version_requirement: ^10 || ^11
